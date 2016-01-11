@@ -140,7 +140,7 @@ if (remote_info.ss_family == AF_INET) {
     inet_ntop(AF_INET6, &s->sin6_addr, ipstr, sizeof ipstr);
 }
 
-std::cout << "Connection accepted from "  << ipstr <<  " using port " << port << endl;
+std::cout << "Conexiune acceptata de la "  << ipstr <<  " folosind portul " << port << endl;
 
     return new_sd;
 
@@ -175,7 +175,7 @@ void *tcp_server_read(void *arg)
         buflen = read(rfd, buffer, sizeof(buffer));
         if (buflen <= 0)
         {
-            cout << "client disconnected. Clearing fd. " << rfd << endl ;
+            cout << "Client deconectat. Eliberam fd. " << rfd << endl ;
             pthread_mutex_lock(&mutex_state);
             FD_CLR(rfd, &the_state);      // free fd's de la ceilalti clienti
             pthread_mutex_unlock(&mutex_state);

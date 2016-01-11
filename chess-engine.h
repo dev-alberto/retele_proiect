@@ -49,9 +49,9 @@ void printeaza_tabla_sah(int clientelnet)
 
     server_send(clientelnet, abc1 + "\n\n");
 
-    string temp("Dead pieces :") ;
-    for (cur_killed = killed.begin(); cur_killed != killed.end(); ++cur_killed)
-        temp +=   *cur_killed ;
+    string temp("Piese capturate :") ;
+    for (it_capt = piese_capturate.begin(); it_capt != piese_capturate.end(); ++it_capt)
+        temp +=   *it_capt ;
 
     server_send(clientelnet, temp + culoare_text + "\n");
 }
@@ -87,7 +87,8 @@ void muta_piesa(char * mutare)  //  Functie care executa miscarile pe tabla de s
     // Facem mutarea
         pthread_mutex_lock(&boardmutex);  //  Blocam aici ca sa nu avem "race conditions"
 
-        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1") killed.insert(killed.begin() ,chessboard[c][d] ) ;
+        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1") 
+            piese_capturate.insert(piese_capturate.begin() ,chessboard[c][d] ) ;
         chessboard[c][d] = chessboard [a][b] ;
         chessboard[a][b] = "X" ;
         
@@ -103,50 +104,48 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
 
     if (command[0]== '1')printeaza_tabla_sah(client) ;  // Apare tabla de sah
 
-    if (command[0]== '9')reseteaza(client) ;                // Reseteaza tabla de sah
+    if (command[0]== '9')reseteaza() ;                // Reseteaza tabla de sah
 
     if(command[0]== '2') quit(client);              // deconecteaza un client 
         
         // Verificam daca comanda este o comanda valida de miscare
   if (command[0] >= 'a' && command[0] <= 'h' && command[1] >= '1' && command[1] <= '8' && command[2] >= 'a' && command[2] <= 'h' && command[3] >= '1' && command[3] <= '8')
-     {
+  {
 
-   if(client==4 && mutare_valida(command) && q%2==0)
+   if(client==4 && mutare_valida(command) && move_validator%2==0)
    {
     muta_piesa(command);
-    q++;
+    move_validator++;
     print_all_and_verify_winner();
-    server_send(client,  "\nYour move:");
+    server_send(client,  "\nMutare:");
     server_send(client, command);
     server_send(client,  "\n");
    }
-     if(client==5 && mutare_valida(command) && q%2==1)
+   else
+   {
+    if(client==4 && mutare_valida(command) && move_validator%2==1)
+        server_send(client,"nu este randul dumneavoastra sa mutati\n");
+    if(client==4 && mutare_valida(command)==false && move_validator%2==0)
+        server_send(client,"mutarea nu este valida,mai incercati\n");
+   }
+     
+     if(client==5 && mutare_valida(command) && move_validator%2==1)
    {
     muta_piesa(command);
-    q++;
+    move_validator++;
     print_all_and_verify_winner();
-    server_send(client,  "\nYour move:");
+    server_send(client,  "\nMutatare:");
     server_send(client, command);
     server_send(client,  "\n");
    }
-}
- 
- //  else if(client==4 && m%2==0)
-//{
- //  server_send(client,"Not your move\n");
-//}
-
-//  if(client==5 && n%2==1)
- //  {
- //   print_all_and_verify_winner();
- //   server_send(client,  "\nYour move:");
- //   server_send(client, command);
- //   server_send(client,  "\n");
- //  }
-  // else if(client==4 && n%2==0)
-//{
-  // server_send(client,"Not your move\n");
-//}
+   else
+   {
+    if(client==5 && mutare_valida(command) && move_validator%2==0)
+        server_send(client,"nu este randul dumneavoastra sa mutati\n");
+    if(client==5 && mutare_valida(command)==false && move_validator%2==1)
+        server_send(client,"mutarea nu este valida,mai incercati\n");
+   }
+  }
 
 }
 
@@ -201,7 +200,7 @@ void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
     chessboard[0][0] = culoare_alba +"\u2656";
     for (int x=0; x<8 ; x++)
         chessboard[x][1] = culoare_alba + "\u2659";
-killed.clear();
+piese_capturate.clear();
     pthread_mutex_unlock(&boardmutex); // deblocam mutexul
 }
 
@@ -209,7 +208,6 @@ killed.clear();
 void   print_all_and_verify_winner()
 // Printam tabla la toti clientii si verificam conditia de castigare a jocului
 {
-
     for (int wdf = 3; wdf < MAXFD; ++wdf)
     {
         if (FD_ISSET(wdf, &the_state)) //verfica daca descriptorul de fisier apartine multimii
@@ -259,10 +257,17 @@ int winner(int x)
 }
 #endif 
 
-void reseteaza(int clientelnet)
+void reseteaza()
 {
 newgame();
-printeaza_tabla_sah(clientelnet);
+move_validator=0;
+for (int wdf = 3; wdf < MAXFD; ++wdf)
+    {
+        if (FD_ISSET(wdf, &the_state)) //verfica daca descriptorul de fisier apartine multimii
+        {
+            printeaza_tabla_sah(wdf);
+        }
+    }
 }
 
 bool mutare_valida(char * mutare)

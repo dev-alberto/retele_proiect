@@ -53,13 +53,14 @@ void print_all_and_verify_winner();
 int quit(int x);
 int winner (int x);
 void  do_spectator_command(char * command, int client);
-void reseteaza(int clientelnet);
+void reseteaza();
 bool mutare_valida(char * mutare);
-    int q=0;
+int move_validator=0;
+
 vector<vector<string> > chessboard;     //  Folosim un vector 2D pentru tabla de sah
 
-list <string> killed;                   // Folosim o lista inlantuita pentru a stoca piesele omorate
-list <string>::iterator cur_killed;     // Folosim un iterator pentru a lucra cu ele
+list <string> piese_capturate;                   // Folosim o lista inlantuita pentru a stoca piesele omorate
+list <string>::iterator it_capt;     // Folosim un iterator pentru a lucra cu ele
 
 // Culori
 const string culoare_text ("\033[22;30m");
