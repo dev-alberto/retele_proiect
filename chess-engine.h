@@ -24,17 +24,17 @@ void printeaza_tabla_sah(int clientelnet)
         for (int x=0 ; x<8 ; x++)
         {
 
-            if (chessboard[x][y] == "X") // .
+            if (tablasah[x][y] == "X") // .
             {
                 if (isblack(x+1,y+1) )
                 {
-                    chessboard[x][y] = culoare_patrat_negru + "\u25A0" ;
+                    tablasah[x][y] = culoare_patrat_negru + "\u25A0" ;
                 }
                 else
-                    chessboard[x][y] = culoare_patrat_alb + "\u25A1" ;
+                    tablasah[x][y] = culoare_patrat_alb + "\u25A1" ;
             }
 
-            server_send(clientelnet, " " + chessboard[x][y] + " ");
+            server_send(clientelnet, " " + tablasah[x][y] + " ");
 
         }
 
@@ -77,7 +77,7 @@ void muta_piesa(char * mutare)  //  Functie care executa miscarile pe tabla de s
     d = mutare[3] -49;
 
 
-   if (chessboard [a][b] ==culoare_patrat_negru + "\u25A0" || chessboard [a][b] ==culoare_patrat_alb + "\u25A1")
+   if (tablasah [a][b] ==culoare_patrat_negru + "\u25A0" || tablasah [a][b] ==culoare_patrat_alb + "\u25A1")
     {
        accept = false ;
     }
@@ -87,10 +87,10 @@ void muta_piesa(char * mutare)  //  Functie care executa miscarile pe tabla de s
     // Facem mutarea
         pthread_mutex_lock(&mutextabla);  //  Blocam aici ca sa nu avem "race conditions"
 
-        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
-            piese_capturate.insert(piese_capturate.begin() ,chessboard[c][d] ) ;
-        chessboard[c][d] = chessboard [a][b] ;
-        chessboard[a][b] = "X" ;
+        if (tablasah[c][d] != "X" && tablasah[c][d] != culoare_patrat_negru +"\u25A0"  && tablasah[c][d] != culoare_patrat_alb +"\u25A1")
+            piese_capturate.insert(piese_capturate.begin() ,tablasah[c][d] ) ;
+        tablasah[c][d] = tablasah [a][b] ;
+        tablasah[a][b] = "X" ;
 
         pthread_mutex_unlock(&mutextabla); // deblocam
     }
@@ -114,7 +114,7 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
    {
     muta_piesa(command);
     move_validator++;
-    print_all_and_verify_winner();
+    printeaza_la_toti_si_verifica_castigator();
     server_send(client,  "\nMutare:");
     server_send(client, command);
     server_send(client,  "\n");
@@ -133,7 +133,7 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
    {
     muta_piesa(command);
     move_validator++;
-    print_all_and_verify_winner();
+    printeaza_la_toti_si_verifica_castigator();
     server_send(client,  "\nMutatare:");
     server_send(client, command);
     server_send(client,  "\n");
@@ -174,40 +174,40 @@ void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
     {
         for (int x=0 ; x<8 ; x++)
         {
-            chessboard[x][y] = "X" ; //  X reprezinta spatiu gol
+            tablasah[x][y] = "X" ; //  X reprezinta spatiu gol
         }
     }
 
     //aici generam piesele de sah
 
-    chessboard[7][7] = culoare_neagra + "\u265C";
-    chessboard[6][7] = culoare_neagra + "\u265E";
-    chessboard[5][7] = culoare_neagra + "\u265D";
-    chessboard[4][7] = culoare_neagra + "\u265A";
-    chessboard[3][7] = culoare_neagra + "\u265B";
-    chessboard[2][7] = culoare_neagra + "\u265D";
-    chessboard[1][7] = culoare_neagra + "\u265E";
-    chessboard[0][7] = culoare_neagra + "\u265C";
+    tablasah[7][7] = culoare_neagra + "\u265C";
+    tablasah[6][7] = culoare_neagra + "\u265E";
+    tablasah[5][7] = culoare_neagra + "\u265D";
+    tablasah[4][7] = culoare_neagra + "\u265A";
+    tablasah[3][7] = culoare_neagra + "\u265B";
+    tablasah[2][7] = culoare_neagra + "\u265D";
+    tablasah[1][7] = culoare_neagra + "\u265E";
+    tablasah[0][7] = culoare_neagra + "\u265C";
     for (int x=0; x<8 ; x++)
-        chessboard[x][6] = culoare_neagra + "\u265F";
+        tablasah[x][6] = culoare_neagra + "\u265F";
 
 
-    chessboard[7][0] = culoare_alba +"\u2656";
-    chessboard[6][0] = culoare_alba +"\u2658";
-    chessboard[5][0] = culoare_alba +"\u2657";
-    chessboard[4][0] = culoare_alba +"\u2654";
-    chessboard[3][0] = culoare_alba +"\u2655";
-    chessboard[2][0] = culoare_alba +"\u2657";
-    chessboard[1][0] = culoare_alba +"\u2658";
-    chessboard[0][0] = culoare_alba +"\u2656";
+    tablasah[7][0] = culoare_alba +"\u2656";
+    tablasah[6][0] = culoare_alba +"\u2658";
+    tablasah[5][0] = culoare_alba +"\u2657";
+    tablasah[4][0] = culoare_alba +"\u2654";
+    tablasah[3][0] = culoare_alba +"\u2655";
+    tablasah[2][0] = culoare_alba +"\u2657";
+    tablasah[1][0] = culoare_alba +"\u2658";
+    tablasah[0][0] = culoare_alba +"\u2656";
     for (int x=0; x<8 ; x++)
-        chessboard[x][1] = culoare_alba + "\u2659";
+        tablasah[x][1] = culoare_alba + "\u2659";
 piese_capturate.clear();
     pthread_mutex_unlock(&mutextabla); // deblocam mutexul
 }
 
 
-void   print_all_and_verify_winner()
+void   printeaza_la_toti_si_verifica_castigator()
 // Printam tabla la toti clientii si verificam conditia de castigare a jocului
 {
     for (int wdf = 3; wdf < MAXFD; ++wdf)
@@ -237,9 +237,9 @@ int winner(int x)
     {
         for (int x=0 ; x<8 ; x++)
         {
-            if(chessboard[x][y]==culoare_alba +"\u2654")
+            if(tablasah[x][y]==culoare_alba +"\u2654")
                 white_king++;
-            else if(chessboard[x][y]==culoare_neagra + "\u265A")
+            else if(tablasah[x][y]==culoare_neagra + "\u265A")
                 black_king++;
         }
     }
@@ -284,7 +284,7 @@ bool mutare_valida(char * mutare)
     d = mutare[3] -49;
 
 
-   if (chessboard [a][b] ==culoare_patrat_negru + "\u25A0" || chessboard [a][b] ==culoare_patrat_alb + "\u25A1")
+   if (tablasah [a][b] ==culoare_patrat_negru + "\u25A0" || tablasah [a][b] ==culoare_patrat_alb + "\u25A1")
     {
        accept = false ;
     }
@@ -294,7 +294,7 @@ bool mutare_valida(char * mutare)
         // Facem mutarea
         pthread_mutex_lock(&mutextabla);  // Blocam aici ca sa nu avem "race conditions"
 
-        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
+        if (tablasah[c][d] != "X" && tablasah[c][d] != culoare_patrat_negru +"\u25A0"  && tablasah[c][d] != culoare_patrat_alb +"\u25A1")
             accept=true;
 
         pthread_mutex_unlock(&mutextabla); // deblocam
@@ -314,7 +314,7 @@ bool mutare_valida_alb(char * mutare)
   c = mutare[2] -97;
   d = mutare[3] -49;
 
-  if(chessboard[a][b]==culoare_neagra + "\u265C" || chessboard[a][b]==culoare_neagra + "\u265E"  || chessboard[a][b]==culoare_neagra + "\u265D"  || chessboard[a][b]==culoare_neagra + "\u265A"  ||  chessboard[a][b]== culoare_neagra + "\u265B" || chessboard[a][b] ==culoare_neagra + "\u265F")
+  if(tablasah[a][b]==culoare_neagra + "\u265C" || tablasah[a][b]==culoare_neagra + "\u265E"  || tablasah[a][b]==culoare_neagra + "\u265D"  || tablasah[a][b]==culoare_neagra + "\u265A"  ||  tablasah[a][b]== culoare_neagra + "\u265B" || tablasah[a][b] ==culoare_neagra + "\u265F")
   accept=false;
   return accept;
 }
@@ -330,7 +330,7 @@ bool mutare_valida_negru(char * mutare)
   c = mutare[2] -97;
   d = mutare[3] -49;
 
-  if(chessboard[a][b]==culoare_alba +"\u2656" || chessboard[a][b]==culoare_alba +"\u2658"  || chessboard[a][b]==culoare_alba +"\u2657"  || chessboard[a][b]==culoare_alba +"\u2654"  ||  chessboard[a][b]== culoare_alba +"\u2655" || chessboard[a][b] ==culoare_alba + "\u2659")
+  if(tablasah[a][b]==culoare_alba +"\u2656" || tablasah[a][b]==culoare_alba +"\u2658"  || tablasah[a][b]==culoare_alba +"\u2657"  || tablasah[a][b]==culoare_alba +"\u2654"  ||  tablasah[a][b]== culoare_alba +"\u2655" || tablasah[a][b] ==culoare_alba + "\u2659")
   accept=false;
   return accept;
 }

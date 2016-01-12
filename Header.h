@@ -27,7 +27,7 @@ void *treat(void *arg) ;
 //constantele serverului
 const  char * PORT = "12345" ;
 const int MAXLEN = 1024 ;   // Lungimea maxima a unui mesaj.
-const int MAXFD = 10 ;       // Maximum file descriptors to use. Equals maximum clients. Numarul maxim de descriptori. Este egala cu numarul maxim de clienti
+const int MAXFD = 10 ;       // Numarul maxim de descriptori. Este egala cu numarul maxim de clienti
 const int BACKLOG = 5 ;     // Numarul maxim de conexiuni care pot astepta inainte de a fi acceptate
 extern int errno; // codul de eroare returnat de anumite apeluri
 
@@ -45,12 +45,12 @@ pthread_mutex_t mutextabla = PTHREAD_MUTEX_INITIALIZER; // mutex locker pentru v
 
 
 // Declaratii functii sah
-void newgame() ;
+void newgame();
 void printeaza_tabla_sah(int clientelnet);
 bool isblack(int x , int y) ;
 void muta_piesa(char * mutare) ;
 void do_gamer_command(char * command, int client) ;
-void print_all_and_verify_winner();
+void printeaza_la_toti_si_verifica_castigator();
 int quit(int x);
 int winner (int x);
 void  do_spectator_command(char * command, int client);
@@ -60,7 +60,7 @@ bool mutare_valida_alb(char * mutare);
 bool mutare_valida_negru(char * mutare);
 int move_validator=0;
 
-vector<vector<string> > chessboard;     //  Folosim un vector 2D pentru tabla de sah
+vector<vector<string> > tablasah;     //  Folosim un vector 2D pentru tabla de sah
 
 list <string> piese_capturate;                   // Folosim o lista inlantuita pentru a stoca piesele omorate
 list <string>::iterator it_capt;     // Folosim un iterator pentru a lucra cu ele

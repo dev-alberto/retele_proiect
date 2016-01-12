@@ -3,9 +3,9 @@
 int main()
 {
 
-    chessboard.resize(8);
+    tablasah.resize(8);
     for (int i = 0; i < 8; ++i)
-        chessboard[i].resize(8);
+        tablasah[i].resize(8);
 
      newgame(); // Umplem tabela cu piese
 
