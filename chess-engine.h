@@ -5,7 +5,7 @@
 
 
 void printeaza_tabla_sah(int clientelnet)
- 
+
 //  Functie care trimite tabla de sah la clientii telnet
 
 {
@@ -28,10 +28,10 @@ void printeaza_tabla_sah(int clientelnet)
             {
                 if (isblack(x+1,y+1) )
                 {
-                    chessboard[x][y] = culoare_patrat_negru + "\u25A0" ; 
+                    chessboard[x][y] = culoare_patrat_negru + "\u25A0" ;
                 }
                 else
-                    chessboard[x][y] = culoare_patrat_alb + "\u25A1" ; 
+                    chessboard[x][y] = culoare_patrat_alb + "\u25A1" ;
             }
 
             server_send(clientelnet, " " + chessboard[x][y] + " ");
@@ -87,11 +87,11 @@ void muta_piesa(char * mutare)  //  Functie care executa miscarile pe tabla de s
     // Facem mutarea
         pthread_mutex_lock(&boardmutex);  //  Blocam aici ca sa nu avem "race conditions"
 
-        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1") 
+        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
             piese_capturate.insert(piese_capturate.begin() ,chessboard[c][d] ) ;
         chessboard[c][d] = chessboard [a][b] ;
         chessboard[a][b] = "X" ;
-        
+
         pthread_mutex_unlock(&boardmutex); // deblocam
     }
 
@@ -106,13 +106,13 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
 
     if (command[0]== '9')reseteaza() ;                // Reseteaza tabla de sah
 
-    if(command[0]== '2') quit(client);              // deconecteaza un client 
-        
+    if(command[0]== '2') quit(client);              // deconecteaza un client
+
         // Verificam daca comanda este o comanda valida de miscare
   if (command[0] >= 'a' && command[0] <= 'h' && command[1] >= '1' && command[1] <= '8' && command[2] >= 'a' && command[2] <= 'h' && command[3] >= '1' && command[3] <= '8')
   {
 
-   if(client==4 && mutare_valida(command) && move_validator%2==0)
+   if(client==4 && mutare_valida(command) &&  mutare_valida_alb(command) && move_validator%2==0)
    {
     muta_piesa(command);
     move_validator++;
@@ -127,9 +127,11 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
         server_send(client,"nu este randul dumneavoastra sa mutati\n");
     if(client==4 && mutare_valida(command)==false && move_validator%2==0)
         server_send(client,"mutarea nu este valida,mai incercati\n");
+    if(client==4 && mutare_valida(command) &&  mutare_valida_alb(command)==false && move_validator%2==0)
+    server_send(client,"nu puteti muta piesa adversa\n");    
    }
-     
-     if(client==5 && mutare_valida(command) && move_validator%2==1)
+
+     if(client==5 && mutare_valida(command) && mutare_valida_negru(command) && move_validator%2==1)
    {
     muta_piesa(command);
     move_validator++;
@@ -144,6 +146,8 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
         server_send(client,"nu este randul dumneavoastra sa mutati\n");
     if(client==5 && mutare_valida(command)==false && move_validator%2==1)
         server_send(client,"mutarea nu este valida,mai incercati\n");
+    if (client==5 && mutare_valida(command) && mutare_valida_negru(command)==false && move_validator%2==1)
+    server_send(client,"nu puteti muta piesa adversa\n");
    }
   }
 
@@ -153,9 +157,9 @@ void  do_spectator_command(char * command, int client) // functie pentru comenzi
 {
 
     if (command[0]== '1')printeaza_tabla_sah(client) ;  // Apare tabla de sah
-           
-    if(command[0]== '2') quit(client);              // deconecteaza un client 
-       
+
+    if(command[0]== '2') quit(client);              // deconecteaza un client
+
         // Verificam daca comanda este o comanda valida de miscare
     if (command[0] >= 'a' && command[0] <= 'h' && command[1] >= '1' && command[1] <= '8' && command[2] >= 'a' && command[2] <= 'h' && command[3] >= '1' && command[3] <= '8')
     {
@@ -164,7 +168,7 @@ void  do_spectator_command(char * command, int client) // functie pentru comenzi
 
 }
 
-void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala 
+void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
 {
     pthread_mutex_lock(&boardmutex); // blocam mutexul
 
@@ -193,7 +197,7 @@ void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
     chessboard[7][0] = culoare_alba +"\u2656";
     chessboard[6][0] = culoare_alba +"\u2658";
     chessboard[5][0] = culoare_alba +"\u2657";
-    chessboard[4][0] = culoare_alba +"\u2654"; 
+    chessboard[4][0] = culoare_alba +"\u2654";
     chessboard[3][0] = culoare_alba +"\u2655";
     chessboard[2][0] = culoare_alba +"\u2657";
     chessboard[1][0] = culoare_alba +"\u2658";
@@ -255,7 +259,7 @@ int winner(int x)
         //newgame();
     return 0;
 }
-#endif 
+#endif
 
 void reseteaza()
 {
@@ -292,11 +296,43 @@ bool mutare_valida(char * mutare)
         // Facem mutarea
         pthread_mutex_lock(&boardmutex);  // Blocam aici ca sa nu avem "race conditions"
 
-        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1") 
+        if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
             accept=true;
-        
+
         pthread_mutex_unlock(&boardmutex); // deblocam
     }
 
     return accept;
+}
+
+bool mutare_valida_alb(char * mutare)
+{
+  bool accept=true;
+
+  int a,b,c,d ;
+
+  a = mutare[0] -97;
+  b = mutare[1] -49;
+  c = mutare[2] -97;
+  d = mutare[3] -49;
+
+  if(chessboard[a][b]==culoare_neagra + "\u265C" || chessboard[a][b]==culoare_neagra + "\u265E"  || chessboard[a][b]==culoare_neagra + "\u265D"  || chessboard[a][b]==culoare_neagra + "\u265A"  ||  chessboard[a][b]== culoare_neagra + "\u265B" || chessboard[a][b] ==culoare_neagra + "\u265F")
+  accept=false;
+  return accept;
+}
+
+bool mutare_valida_negru(char * mutare)
+{
+  bool accept=true;
+
+  int a,b,c,d;
+
+  a = mutare[0] -97;
+  b = mutare[1] -49;
+  c = mutare[2] -97;
+  d = mutare[3] -49;
+
+  if(chessboard[a][b]==culoare_alba +"\u2656" || chessboard[a][b]==culoare_alba +"\u2658"  || chessboard[a][b]==culoare_alba +"\u2657"  || chessboard[a][b]==culoare_alba +"\u2654"  ||  chessboard[a][b]== culoare_alba +"\u2655" || chessboard[a][b] ==culoare_alba + "\u2659")
+  accept=false;
+  return accept;
 }

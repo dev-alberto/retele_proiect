@@ -24,15 +24,15 @@ int server_send(int fd, string data);
 void *tcp_server_read(void *arg) ;
 
 //constantele serverului
-const  char * PORT = "12345" ; 
+const  char * PORT = "12345" ;
 const int MAXLEN = 1024 ;   // Lungimea maxima a unui mesaj.
 const int MAXFD = 10 ;       // Maximum file descriptors to use. Equals maximum clients. Numarul maxim de descriptori. Este egala cu numarul maxim de clienti
-const int BACKLOG = 5 ;     // Numarul maxim de conexiuni care pot astepta inainte de a fi acceptate 
+const int BACKLOG = 5 ;     // Numarul maxim de conexiuni care pot astepta inainte de a fi acceptate
 
 
 //   Trebuie sa fie declarata volatile pentru ca poate fi modificata de un alt thread. Adica un compilator nu poate
-//   optimiza codulul pentru ca, este declarat asa fel incat nu numai programul poate schimba variabila dar si programe externe, 
-//   adica threaduri in cazul nostru 
+//   optimiza codulul pentru ca, este declarat asa fel incat nu numai programul poate schimba variabila dar si programe externe,
+//   adica threaduri in cazul nostru
 
 volatile fd_set the_state;
 
@@ -55,6 +55,8 @@ int winner (int x);
 void  do_spectator_command(char * command, int client);
 void reseteaza();
 bool mutare_valida(char * mutare);
+bool mutare_valida_alb(char * mutare);
+bool mutare_valida_negru(char * mutare);
 int move_validator=0;
 
 vector<vector<string> > chessboard;     //  Folosim un vector 2D pentru tabla de sah
