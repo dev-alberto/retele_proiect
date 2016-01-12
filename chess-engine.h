@@ -85,17 +85,15 @@ void muta_piesa(char * mutare)  //  Functie care executa miscarile pe tabla de s
     {
 
     // Facem mutarea
-        pthread_mutex_lock(&boardmutex);  //  Blocam aici ca sa nu avem "race conditions"
+        pthread_mutex_lock(&mutextabla);  //  Blocam aici ca sa nu avem "race conditions"
 
         if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
             piese_capturate.insert(piese_capturate.begin() ,chessboard[c][d] ) ;
         chessboard[c][d] = chessboard [a][b] ;
         chessboard[a][b] = "X" ;
 
-        pthread_mutex_unlock(&boardmutex); // deblocam
+        pthread_mutex_unlock(&mutextabla); // deblocam
     }
-
-   // return accept;
 
 }
 
@@ -128,7 +126,7 @@ void  do_gamer_command(char * command, int client) // functie pt comenzile jucat
     if(client==4 && mutare_valida(command)==false && move_validator%2==0)
         server_send(client,"mutarea nu este valida,mai incercati\n");
     if(client==4 && mutare_valida(command) &&  mutare_valida_alb(command)==false && move_validator%2==0)
-    server_send(client,"nu puteti muta piesa adversa\n");    
+    server_send(client,"nu puteti muta piesa adversa\n");
    }
 
      if(client==5 && mutare_valida(command) && mutare_valida_negru(command) && move_validator%2==1)
@@ -170,7 +168,7 @@ void  do_spectator_command(char * command, int client) // functie pentru comenzi
 
 void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
 {
-    pthread_mutex_lock(&boardmutex); // blocam mutexul
+    pthread_mutex_lock(&mutextabla); // blocam mutexul
 
     for (int y=7 ; y>-1 ; y--)
     {
@@ -205,7 +203,7 @@ void newgame()  //fuctie care seteaza tbla de sah la starea ei initiala
     for (int x=0; x<8 ; x++)
         chessboard[x][1] = culoare_alba + "\u2659";
 piese_capturate.clear();
-    pthread_mutex_unlock(&boardmutex); // deblocam mutexul
+    pthread_mutex_unlock(&mutextabla); // deblocam mutexul
 }
 
 
@@ -294,12 +292,12 @@ bool mutare_valida(char * mutare)
     {
 
         // Facem mutarea
-        pthread_mutex_lock(&boardmutex);  // Blocam aici ca sa nu avem "race conditions"
+        pthread_mutex_lock(&mutextabla);  // Blocam aici ca sa nu avem "race conditions"
 
         if (chessboard[c][d] != "X" && chessboard[c][d] != culoare_patrat_negru +"\u25A0"  && chessboard[c][d] != culoare_patrat_alb +"\u25A1")
             accept=true;
 
-        pthread_mutex_unlock(&boardmutex); // deblocam
+        pthread_mutex_unlock(&mutextabla); // deblocam
     }
 
     return accept;

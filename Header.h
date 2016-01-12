@@ -14,21 +14,22 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <sys/wait.h>
 using namespace std;
 
 // Declaratii funtiile server
-int server_start_listen() ;
-int server_establish_connection(int server_fd);
+int server_listen() ;
+int connect_to_server(int server_fd);
 int server_send(int fd, string data);
-void *tcp_server_read(void *arg) ;
+void *treat(void *arg) ;
 
 //constantele serverului
 const  char * PORT = "12345" ;
 const int MAXLEN = 1024 ;   // Lungimea maxima a unui mesaj.
 const int MAXFD = 10 ;       // Maximum file descriptors to use. Equals maximum clients. Numarul maxim de descriptori. Este egala cu numarul maxim de clienti
 const int BACKLOG = 5 ;     // Numarul maxim de conexiuni care pot astepta inainte de a fi acceptate
-
+extern int errno; // codul de eroare returnat de anumite apeluri
 
 //   Trebuie sa fie declarata volatile pentru ca poate fi modificata de un alt thread. Adica un compilator nu poate
 //   optimiza codulul pentru ca, este declarat asa fel incat nu numai programul poate schimba variabila dar si programe externe,
@@ -36,9 +37,9 @@ const int BACKLOG = 5 ;     // Numarul maxim de conexiuni care pot astepta inain
 
 volatile fd_set the_state;
 
-pthread_mutex_t mutex_state = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mlock = PTHREAD_MUTEX_INITIALIZER; // variabila mutex ce va fi partajata de threaduri
 
-pthread_mutex_t boardmutex = PTHREAD_MUTEX_INITIALIZER; // mutex locker pentru vectorul tablei de sah.
+pthread_mutex_t mutextabla = PTHREAD_MUTEX_INITIALIZER; // mutex locker pentru vectorul tablei de sah.
 
 
 

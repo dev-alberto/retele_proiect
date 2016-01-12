@@ -9,31 +9,30 @@ int main()
 
      newgame(); // Umplem tabela cu piese
 
-    cout << "Serverul a pornit"  << endl ; 
+    cout << "Serverul a pornit"  << endl ;
 
     // Punem serverul sa asculte la portul 12345
-    // server_start_listen(12345)  va returna fd serverului
 
-    int server_fd = server_start_listen() ;
+    int server_fd = server_listen() ;
     if (server_fd == -1)
     {
         cout << "Eroare, inchid programul" ;
         return 1 ;
     }
 
-    string gamer_msg =("Bine ati venit la acest server de sah.\n Sunteti jucator. Comenzile valide sunt:\n 1 pentru a printa tabla de joc, 2 pentru a iesi din joc\n  sau '9' pentru a reseta tabla.\nPentru a misca piesele de joc, tastati coordonatele de pe tabla\nDe exemplu 'a2a4'\n");
-    string spactator_msg=("Bine ati venit la aceasta server de sah.\n Puteti doar asista la joc sau iesi din joc.\n Apasati 1 pentru a asista si 2 pentru a iesi\n");
+    string gamer_msg =("Bine ati venit la acest server de sah.\n Sunteti jucator. Comenzile valide sunt:\n 1 pentru a printa tabla de joc, 2 pentru a iesi din joc\nsau '9' pentru a reseta tabla.\nPentru a misca piesele de joc, tastati coordonatele de pe tabla\nDe exemplu 'a2a4'\n");
+    string spactator_msg=("Bine ati venit la aceasta server de sah.\n Puteti doar asista la joc sau iesi din joc.\n Apasati 1 pentru a asista sau 2 pentru a iesi\n");
     pthread_t threads[MAXFD]; // cream handles pt threaduri
 
-    FD_ZERO(&the_state); 
+    FD_ZERO(&the_state);
 
     while(1) // incepem bucla
     {
         int rfd;
-        void *arg; 
+        void *arg;
 
         //  Daca un client incearca sa se conecteze, il conectam si cream un fd pentru el
-        rfd = server_establish_connection(server_fd);
+        rfd = connect_to_server(server_fd);
 
         if (rfd >=0)
         {
@@ -45,15 +44,15 @@ int main()
                 continue;
             }
 
-         pthread_mutex_lock(&mutex_state);  // Ne asiguram ca 2 threaduri nu pot crea un fd in acelasi timp
+         pthread_mutex_lock(&mlock);  // Ne asiguram ca 2 threaduri nu pot crea un fd in acelasi timp
 
           FD_SET(rfd, &the_state);  //  Adaugam un fd la multimea FD-urilor
 
-          pthread_mutex_unlock(&mutex_state); // deblocam mutex
+          pthread_mutex_unlock(&mlock); // deblocam mutex
 
         arg = (void *) rfd;
                   //  Cream un nou thread pentru client care intercepteaza toate datele de la client
-        pthread_create(&threads[rfd], NULL, tcp_server_read, arg);
+        pthread_create(&threads[rfd], NULL, treat, arg);
       }
         if(rfd>5)
             server_send(rfd, spactator_msg); // trimitem mesaj cu instructiuni
@@ -64,7 +63,7 @@ int main()
     return 0;
 }
 
-int server_start_listen()
+int server_listen()
 {
 
 struct addrinfo hostinfo, *res;
@@ -75,7 +74,7 @@ int server_fd; //  fd-ul la care serverul asculta
 int ret;
 int yes = 1;
 
-//   mai intai incarcam adresele struct cu getaddrinfo(): 
+//   mai intai incarcam adresele struct cu getaddrinfo():
 
 memset(&hostinfo, 0, sizeof(hostinfo));
 
@@ -87,11 +86,19 @@ getaddrinfo(NULL, PORT, &hostinfo, &res);
 
 
     server_fd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-    //if(server_fd < 0) throw o eroare;
+    if(server_fd < 0)
+    {
+      perror("Eroare la socket()\n");
+      return errno;
+    }
 
     // Previne eroarea: "Error Address already in use"
     ret = setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
-    // if(ret < 0) throw o eroare;
+     if(ret < 0)
+     {
+       perror("Eroare la setsockopt()\n");
+       return errno;
+     }
 
     ret = bind(server_fd, res->ai_addr, res->ai_addrlen);
 
@@ -102,7 +109,11 @@ getaddrinfo(NULL, PORT, &hostinfo, &res);
     }
 
     ret = listen(server_fd, BACKLOG);
-    //if(ret < 0) throw o eroare
+    if(ret < 0)
+    {
+      perror("Eroare la listen()\n");
+      return errno;
+    }
 
 
 
@@ -110,10 +121,10 @@ return server_fd;
 
 }
 
-int server_establish_connection(int server_fd)
-//   Aceasta functie va face conexiunea dintre server si client. Se va executa pentru fiecare 
+int connect_to_server(int server_fd)
+//   Aceasta functie va face conexiunea dintre server si client. Se va executa pentru fiecare
 //   client nou care se conecteaza la server. Va returna filedescripterul socketului care citeste
-//   datele de la clienti sau va returna o eroare. 
+//   datele de la clienti sau va returna o eroare.
 {
     char ipstr[INET6_ADDRSTRLEN];
     int port;
@@ -125,7 +136,11 @@ int server_establish_connection(int server_fd)
 
     addr_size = sizeof(addr_size);
     new_sd = accept(server_fd, (struct sockaddr *) &remote_info, &addr_size);
-    //if (fd < 0) throw o eroare;
+    if (new_sd < 0)
+    {
+      perror("Eroare la accept()\n");
+      return errno;
+    }
 
     getpeername(new_sd, (struct sockaddr*)&remote_info, &addr_size);
 
@@ -153,12 +168,16 @@ int server_send(int fd, string data)
     int ret;
 
     ret = send(fd, data.c_str(), strlen(data.c_str()),0);
-    //if(ret != strlen(data.c_str()) throw some error;
+    if(ret != strlen(data.c_str()))
+    {
+      perror("Eroare");
+      return errno;
+    }
     return 0;
 }
 
-void *tcp_server_read(void *arg)
-// Aceasta functie ruleaza intr-un thread pentru fiecare client si citeste datele trimise. 
+void *treat(void *arg)
+// Aceasta functie ruleaza intr-un thread pentru fiecare client si citeste datele trimise.
 // De asemenea trimite datele la ceilalti clienti
 
 {
@@ -176,15 +195,15 @@ void *tcp_server_read(void *arg)
         if (buflen <= 0)
         {
             cout << "Client deconectat. Eliberam fd. " << rfd << endl ;
-            pthread_mutex_lock(&mutex_state);
+            pthread_mutex_lock(&mlock);
             FD_CLR(rfd, &the_state);      // free fd's de la ceilalti clienti
-            pthread_mutex_unlock(&mutex_state);
+            pthread_mutex_unlock(&mlock);
             close(rfd);
             pthread_exit(NULL);
         }
 
         // Trimite date la toti ceilalti clienti conectati
-        pthread_mutex_lock(&mutex_state);
+        pthread_mutex_lock(&mlock);
 
         for (wfd = 3; wfd < MAXFD; ++wfd)
         {
@@ -202,11 +221,11 @@ void *tcp_server_read(void *arg)
 
         }
 
-        pthread_mutex_unlock(&mutex_state);
-        
+        pthread_mutex_unlock(&mlock);
+
         if(rfd>5)
                 do_spectator_command(buffer,rfd);
-            else 
+            else
                do_gamer_command(buffer,rfd);
     }
     return NULL;
