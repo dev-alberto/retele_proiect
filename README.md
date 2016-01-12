@@ -1,3 +1,6 @@
 # retele_proiect
 Chess Server application
-Alberto-Alexandru Cieri- Grupa B5
+This is my very first github repository. Hope you enjoy it
+
+Compile using g++ server.cpp -o server -pthread
+Connect clients using telnet 127.0.0.1 12345
