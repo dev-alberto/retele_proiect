@@ -168,11 +168,7 @@ int server_send(int fd, string data)
     int ret;
 
     ret = send(fd, data.c_str(), strlen(data.c_str()),0);
-    if(ret != strlen(data.c_str()))
-    {
-      perror("Eroare");
-      return errno;
-    }
+    
     return 0;
 }
 
